@@ -61,10 +61,13 @@ jobs:
           update_release_body: true
           files: build/muteteams.exe.gz
 
-      - uses: actions/create-release@v1
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create.outputs.url }}
-          asset_path: "build/muteteams.exe.gz"
-          tag_name: v${{ steps.version.outputs.version }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: build/muteteams.exe.gz
+          asset_name: muteteams.exe.gz
+          asset_content_type: application/gzip
