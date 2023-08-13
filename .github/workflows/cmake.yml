@@ -49,7 +49,7 @@ jobs:
         shell: powershell
         run: |
           pip install cmake ninja
-          cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ .
+          cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS="-g -O3 -save-temps=obj" -DCMAKE_CXX_FLAGS="-g -O3 -save-temps=obj"
           cmake --build build --config ${{env.BUILD_TYPE}}
           Compress-Archive -Path build/*.exe -Destination build/muteteams.zip
       - name: VirusTotal Monitor Scan
