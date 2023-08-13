@@ -62,10 +62,8 @@ jobs:
           files: build/muteteams.exe.gz
 
       - uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
 
         with:
           upload_url: ${{ needs.create.outputs.url }}
           asset_path: "build/muteteams.exe.gz"
-          
+          tag_name: v${{ steps.version.outputs.version }}
