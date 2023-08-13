@@ -3,13 +3,13 @@ name: Cmake Auto Build
 on:
   push:
     paths:
-      - 'VERSION'
+      - "VERSION"
   workflow_dispatch:
     inputs:
       name:
-        description: 'reason'
-        required:    true
-        default:     'any'
+        description: "reason"
+        required: true
+        default: "any"
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -19,26 +19,24 @@ jobs:
   create:
     runs-on: ubuntu-latest
     outputs:
-      url: ${{ steps.create_release.outputs.upload_url }}    
+      url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - uses: actions/checkout@v3
-      - name: version
-        shell: bash --login {0}
-        run: echo "::set-output name=version::$(cat VERSION)"
-        id: version
-
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Create Release
         id: create_release
-        uses: shogo82148/actions-create-release@v1
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release v${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
           body: auto build.
           draft: false
           prerelease: false
-      
+
   build:
-    needs: [ create ]
+    needs: [create]
     runs-on: windows-latest
 
     steps:
@@ -61,7 +59,7 @@ jobs:
           update_release_body: true
           files: build/muteteams.exe.gz
 
-      - uses: shogo82148/actions-upload-release-asset@v1
+      - uses: actions/create-release@v1
         with:
           upload_url: ${{ needs.create.outputs.url }}
           asset_path: "build/muteteams.exe.gz"

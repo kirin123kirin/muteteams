@@ -39,6 +39,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lpr) {
 }
 
 int main() {
-    EnumWindows(EnumWindowsProc, NULL);
+    LPARAM lpr = NULL;
+    EnumWindows(EnumWindowsProc, lpr);
     return 0;
 }
