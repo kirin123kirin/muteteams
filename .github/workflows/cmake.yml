@@ -21,8 +21,11 @@ jobs:
     outputs:
       url: ${{ steps.create_release.outputs.upload_url }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: version
+        shell: bash --login {0}
+        run: echo "::set-output name=version::$(cat VERSION)"
+        id: version
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -40,7 +43,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # make and build applications
       - name: build
@@ -55,7 +58,7 @@ jobs:
         uses: crazy-max/ghaction-virustotal@v2
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
-          github_token: ${{ secrets.GH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           update_release_body: true
           files: build/muteteams.exe.gz
 
