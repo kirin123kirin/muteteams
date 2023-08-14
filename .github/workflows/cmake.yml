@@ -51,9 +51,7 @@ jobs:
           pip install cmake ninja
           cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS="-g -O3 -save-temps=obj" -DCMAKE_CXX_FLAGS="-g -O3 -save-temps=obj"
           cmake --build build --config ${{env.BUILD_TYPE}}
-          Compress-Archive -Path build/*.exe -Destination build/muteteams.zip
-          echo hoge
-          echo ${{ github.event.repository.name }}
+          Compress-Archive -Path build/*.exe -Destination build/${{ github.event.repository.name }}.zip
       - name: VirusTotal Monitor Scan
         uses: crazy-max/ghaction-virustotal@v2
         with:
@@ -62,7 +60,7 @@ jobs:
           update_release_body: true
           files: |
             build/*.exe
-            build/muteteams.zip
+            build/${{ github.event.repository.name }}.zip
 
       - name: Upload Release Asset
         id: upload-release-asset 
@@ -71,6 +69,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create.outputs.url }}
-          asset_path: build/muteteams.zip
-          asset_name: muteteams.zip
+          asset_path: build/${{ github.event.repository.name }}.zip
+          asset_name: ${{ github.event.repository.name }}.zip
           asset_content_type: application/zip
