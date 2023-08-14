@@ -52,6 +52,8 @@ jobs:
           cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS="-g -O3 -save-temps=obj" -DCMAKE_CXX_FLAGS="-g -O3 -save-temps=obj"
           cmake --build build --config ${{env.BUILD_TYPE}}
           Compress-Archive -Path build/*.exe -Destination build/muteteams.zip
+          echo hoge
+          echo ${{ github.event.repository.name }}
       - name: VirusTotal Monitor Scan
         uses: crazy-max/ghaction-virustotal@v2
         with:
