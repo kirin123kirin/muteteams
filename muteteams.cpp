@@ -54,7 +54,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lpr) {
 }
 
 /* https://stackoverflow.com/questions/48915216/link-error-when-compiling-win32-application-with-clion-cmake-msvc-2015 */
-int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+// int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+int main() {
     EnumWindows(EnumWindowsProc, NULL);
     return 0;
 }
