@@ -30,10 +30,22 @@ jobs:
           cmake --build build --config ${{env.BUILD_TYPE}}
           Compress-Archive -Path build/*.exe -Destination build/${{ github.event.repository.name }}.zip
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: buildfiles
+          path: |
+            build/*.exe
+            build/*.zip
+          retention-days: 5
+
   create:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: buildfiles
+
       - name: VirusTotal Monitor Scan
         id: virustotal
         uses: crazy-max/ghaction-virustotal@v3
