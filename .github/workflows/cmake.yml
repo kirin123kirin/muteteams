@@ -16,29 +16,7 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  create:
-    runs-on: ubuntu-latest
-    outputs:
-      url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: version
-        shell: bash --login {0}
-        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
-        id: version
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          release_name: Release v${{ steps.version.outputs.version }}
-          draft: false
-          prerelease: false
-
   build:
-    needs: [create]
     runs-on: windows-latest
 
     steps:
@@ -51,24 +29,47 @@ jobs:
           cmake -G Ninja -S . -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_FLAGS="-g -O3 -save-temps=obj" -DCMAKE_CXX_FLAGS="-g -O3 -save-temps=obj"
           cmake --build build --config ${{env.BUILD_TYPE}}
           Compress-Archive -Path build/*.exe -Destination build/${{ github.event.repository.name }}.zip
+
+  create:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
       - name: VirusTotal Monitor Scan
+        id: virustotal
         uses: crazy-max/ghaction-virustotal@v3
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          update_release_body: true
-          vt_monitor: true
           files: |
             build/*.exe
             build/${{ github.event.repository.name }}.zip
 
+      - uses: actions/checkout@v3
+      - name: version
+        id: version
+        shell: bash --login {0}
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: Release v${{ steps.version.outputs.version }}
+          draft: false
+          body: |
+            ${{ steps.virustotal.outputs.analysis }}
+          prerelease: false
+
       - name: Upload Release Asset
-        id: upload-release-asset 
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create.outputs.url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: build/${{ github.event.repository.name }}.zip
           asset_name: ${{ github.event.repository.name }}.zip
           asset_content_type: application/zip
