@@ -58,7 +58,7 @@ jobs:
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          files: ./*
+          files: ./*.zip
 
       - name: Create Release
         id: create_release
