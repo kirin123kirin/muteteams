@@ -31,7 +31,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lpr) {
                     (char)0x92, (char)0xCA, (char)0x98, (char)0x62, (char)0x92, (char)0x86, NULL};  // [Microsoft Teams
                                                                                                     // 通話中]を表すUNICODE文字列
 
-    if (hwnd == NULL)
+    if(hwnd == NULL)
         return FALSE;
 
     GetWindowTextA(hwnd, B, BUFSIZE);
@@ -53,9 +53,26 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lpr) {
     return TRUE;
 }
 
-/* https://stackoverflow.com/questions/48915216/link-error-when-compiling-win32-application-with-clion-cmake-msvc-2015 */
-// int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-int main() {
-    EnumWindows(EnumWindowsProc, NULL);
+bool AnyKeyPressed() {
+    for(int code = 0; code < 256; ++code) {
+        if(GetAsyncKeyState(code) & 0x8000)
+            return true;
+    }
+    return false;
+}
+
+/* https://stackoverflow.com/questions/48915216/link-error-when-compiling-win32-application-with-clion-cmake-msvc-2015
+ */
+int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+    // int main() {
+
+    try {
+        int timeout = 10;
+        while(AnyKeyPressed() && --timeout)
+            Sleep(100);
+
+        EnumWindows(EnumWindowsProc, NULL);
+    } catch(...) {
+    }
     return 0;
 }

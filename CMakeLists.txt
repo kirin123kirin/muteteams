@@ -4,7 +4,7 @@ project(muteteams)
 
 add_executable(
             muteteams
-            #WIN32 # no prompt
+            WIN32 # no prompt
             muteteams.cpp
             icon.rc
         )
