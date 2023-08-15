@@ -52,11 +52,12 @@ jobs:
           cmake --build build --config ${{env.BUILD_TYPE}}
           Compress-Archive -Path build/*.exe -Destination build/${{ github.event.repository.name }}.zip
       - name: VirusTotal Monitor Scan
-        uses: crazy-max/ghaction-virustotal@v2
+        uses: crazy-max/ghaction-virustotal@v3
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           update_release_body: true
+          vt_monitor: true
           files: |
             build/*.exe
             build/${{ github.event.repository.name }}.zip
