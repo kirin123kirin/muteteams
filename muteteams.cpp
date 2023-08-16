@@ -1,6 +1,10 @@
+/* muteteams | MIT Liscence | https://github.com/kirin123kirin/muteteams/blob/master/LICENSE */
 #include <Windows.h>
 
 #define BUFSIZE 512
+
+const wchar_t* meating_chk = L" | Microsoft Teams";
+const wchar_t call_chk[] = L"Microsoft Teams 通話中";
 
 void Send_Ctrl_Shift_M() {
     int val[] = {
@@ -25,22 +29,12 @@ void Send_Ctrl_Shift_M() {
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lpr) {
-    char B[BUFSIZE] = {0};
-    char chk[23] = {'M',        'i',        'c',        'r',        'o',        's',        'o', 'f',
-                    't',        ' ',        'T',        'e',        'a',        'm',        's', ' ',
-                    (char)0x92, (char)0xCA, (char)0x98, (char)0x62, (char)0x92, (char)0x86, NULL};  // [Microsoft Teams
-                                                                                                    // 通話中]を表すUNICODE文字列
-
-    if(hwnd == NULL)
-        return FALSE;
-
-    GetWindowTextA(hwnd, B, BUFSIZE);
-
-    if(B[0]) {
-        if(memcmp(B, chk, 22) == 0)
+    wchar_t B[BUFSIZE] = {0};
+    if(GetWindowTextW(hwnd, B, BUFSIZE)) {
+        if(memcmp(B, call_chk, sizeof(call_chk) - sizeof(call_chk[0])) == 0)
             ShowWindow(hwnd, SW_RESTORE);
 
-        if(strstr(B, " | Microsoft Teams")) {
+        if(wcsstr(B, meating_chk)) {
             if(IsIconic(hwnd))
                 ShowWindow(hwnd, SW_RESTORE);
 
@@ -49,7 +43,6 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lpr) {
             exit(0);
         }
     }
-
     return TRUE;
 }
 
@@ -67,9 +60,9 @@ int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     // int main() {
 
     try {
-        int timeout = 10;
+        int timeout = 100;
         while(AnyKeyPressed() && --timeout)
-            Sleep(30);
+            Sleep(10);
 
         EnumWindows(EnumWindowsProc, NULL);
     } catch(...) {
