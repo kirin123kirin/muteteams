@@ -69,7 +69,7 @@ int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     try {
         int timeout = 10;
         while(AnyKeyPressed() && --timeout)
-            Sleep(100);
+            Sleep(30);
 
         EnumWindows(EnumWindowsProc, NULL);
     } catch(...) {
