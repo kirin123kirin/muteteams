@@ -3,48 +3,36 @@
 
 #define BUFSIZE 512
 
-/* 会議中のウィンドウ名検索ワード */
-const wchar_t* meating_chk = L" | Microsoft Teams";
-const wchar_t call_chk[] = L"Microsoft Teams 通話中";
-
 /* キーボードを押下する信号を送信する */
-void Send_Keys(int* keymap, unsigned int len) {
+int Send_Keys(int* keymap, unsigned int len) {
     INPUT inputs[len];
+    int ret = 0;
 
     /* キーを押下する */
     for(unsigned int i = 0; i < len; i++) {
         inputs[i].type = INPUT_KEYBOARD;
         inputs[i].ki.wVk = keymap[i];
         inputs[i].ki.dwFlags = 0;
-        SendInput(1, &inputs[i], sizeof(INPUT));
+        ret += SendInput(1, &inputs[i], sizeof(INPUT)) ? 0 : 1;
     }
 
     /* 押下したキーを上げる */
     for(unsigned int i = 0; i < len; i++) {
         inputs[i].ki.dwFlags = KEYEVENTF_KEYUP;
-        SendInput(1, &inputs[i], sizeof(INPUT));
+        ret += SendInput(1, &inputs[i], sizeof(INPUT)) ? 0 : 1;
     }
+    return ret;
 }
 
 /* 会議中のTeamsウィンドウタイトルを探しミュートコマンド発行する */
 BOOL CALLBACK TeamsGlobalMute(HWND hwnd, LPARAM lpr) {
-    wchar_t B[BUFSIZE] = {0};
+    char B[BUFSIZE] = {0};
 
     /* Windowタイトルを探す */
-    if(GetWindowTextW(hwnd, B, BUFSIZE)) {
-        /* 通話中のウィンドウがあったらウィンドウフォーカスを当てる */
-        if(memcmp(B, call_chk, sizeof(call_chk) - sizeof(call_chk[0])) == 0)
-            ShowWindow(hwnd, SW_RESTORE);
-
-        /* 会議中のウィンドウを探す */
-        if(wcsstr(B, meating_chk)) {
-            /* 会議中のウィンドウが最小化されてたら元のサイズに戻す */
-            if(IsIconic(hwnd))
-                ShowWindow(hwnd, SW_RESTORE);
-
-            /* 会議中のウィンドウを最前面に出す */
-            SetForegroundWindow(hwnd);
-
+    if(GetWindowTextA(hwnd, B, BUFSIZE)) {
+        if(strstr(B, " | Microsoft Teams")) {
+            /* 会議中のウィンドウを探す */
+            SwitchToThisWindow(hwnd, true);
             /* Teamsのミュートコマンド Ctrl+Shift+Mのキーマップを発行する */
             int kmap[] = {
                 VK_CONTROL,  // Ctrl
@@ -72,7 +60,7 @@ int MuteHandler() {
             *p++ = code;
             input.ki.wVk = code;
             if(SendInput(1, &input, sizeof(INPUT)) == 0)
-                break;
+                return 1;
         }
     }
 
@@ -84,8 +72,7 @@ int MuteHandler() {
     p = arry;
     for(; *p; ++p) {
         input.ki.wVk = *p;
-        if(SendInput(1, &input, sizeof(INPUT)) == 0)
-            break;
+        ret += SendInput(1, &input, sizeof(INPUT)) ? 0 : 1;
     }
     return ret;
 }
