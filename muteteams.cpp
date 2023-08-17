@@ -13,13 +13,16 @@ int Send_Keys(int* keymap, unsigned int len) {
         inputs[i].type = INPUT_KEYBOARD;
         inputs[i].ki.wVk = keymap[i];
         inputs[i].ki.dwFlags = 0;
-        ret += SendInput(1, &inputs[i], sizeof(INPUT)) ? 0 : 1;
+        if((SendInput(1, &inputs[i], sizeof(INPUT))))
+            inputs[i].ki.dwFlags = KEYEVENTF_KEYUP;
+        else
+            ret += 1;
     }
 
     /* 押下したキーを上げる */
     for(unsigned int i = 0; i < len; i++) {
-        inputs[i].ki.dwFlags = KEYEVENTF_KEYUP;
-        ret += SendInput(1, &inputs[i], sizeof(INPUT)) ? 0 : 1;
+        if(inputs[i].ki.dwFlags == KEYEVENTF_KEYUP)
+            ret += SendInput(1, &inputs[i], sizeof(INPUT)) ? 0 : 1;
     }
     return ret;
 }
@@ -82,6 +85,5 @@ int MuteHandler() {
     https://stackoverflow.com/questions/48915216/link-error-when-compiling-win32-application-with-clion-cmake-msvc-2015
  */
 int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-    // int main() {
     return MuteHandler();
 }
