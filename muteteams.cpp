@@ -5,25 +5,34 @@
 
 /* キーボードを押下する信号を送信する */
 int Send_Keys(int* keymap, unsigned int len) {
-    INPUT inputs[len];
     int ret = 0;
+    if (keymap == NULL)
+        return 1;
+    
+    INPUT* inputs = (INPUT*)malloc(sizeof(INPUT) * len);
+    if (inputs == NULL)
+        return 1;
 
     /* キーを押下する */
     for(unsigned int i = 0; i < len; i++) {
-        inputs[i].type = INPUT_KEYBOARD;
-        inputs[i].ki.wVk = keymap[i];
-        inputs[i].ki.dwFlags = 0;
-        if((SendInput(1, &inputs[i], sizeof(INPUT))))
-            inputs[i].ki.dwFlags = KEYEVENTF_KEYUP;
+        auto& p = inputs[i];
+        p.type = INPUT_KEYBOARD;
+        p.ki.wVk = keymap[i];
+        p.ki.dwFlags = 0;
+        if((SendInput(1, &p, sizeof(INPUT))))
+            p.ki.dwFlags = KEYEVENTF_KEYUP;
         else
             ret += 1;
     }
 
     /* 押下したキーを上げる */
     for(unsigned int i = 0; i < len; i++) {
-        if(inputs[i].ki.dwFlags == KEYEVENTF_KEYUP)
-            ret += SendInput(1, &inputs[i], sizeof(INPUT)) ? 0 : 1;
+        auto& p = inputs[i];
+        if(p.type == INPUT_KEYBOARD && p.ki.dwFlags == KEYEVENTF_KEYUP && p.ki.wVk == keymap[i])
+            ret += SendInput(1, &p, sizeof(INPUT)) ? 0 : 1;
     }
+    
+    free(inputs);
     return ret;
 }
 
@@ -50,20 +59,23 @@ BOOL CALLBACK TeamsGlobalMute(HWND hwnd, LPARAM lpr) {
 }
 
 int MuteHandler() {
-    INPUT input;
-    input.type = INPUT_KEYBOARD;
+    INPUT inputs[256];
 
     int arry[256] = {0};
-    int* p = arry;
 
     /* キー押下されてたら強制的に離す処理 */
-    input.ki.dwFlags = KEYEVENTF_KEYUP;
-    for(int code = 0; code < 256; ++code) {
-        if(GetAsyncKeyState(code) & 0x8000) {
-            *p++ = code;
-            input.ki.wVk = code;
-            if(SendInput(1, &input, sizeof(INPUT)) == 0)
+    for(unsigned int i = 0; i < 256; ++i) {
+        auto& p = inputs[i];
+        p.type = INPUT_KEYBOARD;
+        p.ki.dwFlags = KEYEVENTF_KEYUP;
+        if(GetAsyncKeyState(i) & 0x8000) {
+            p.ki.wVk = i;
+            if(SendInput(1, &p, sizeof(INPUT))) {
+                p.ki.dwFlags = 0;
+                p.ki.wVk = i;
+            } else {
                 return 1;
+            }
         }
     }
 
@@ -71,11 +83,10 @@ int MuteHandler() {
     int ret = EnumWindows(TeamsGlobalMute, NULL) ? 0 : 1;
 
     /* 処理開始前に押下されていたキーを押されてた状態に復元する */
-    input.ki.dwFlags = 0;
-    p = arry;
-    for(; *p; ++p) {
-        input.ki.wVk = *p;
-        ret += SendInput(1, &input, sizeof(INPUT)) ? 0 : 1;
+    for(unsigned int i = 0; i < 256; ++i) {
+        auto& p = inputs[i];
+        if(p.type == INPUT_KEYBOARD && p.ki.dwFlags == 0 && p.ki.wVk == i)
+            ret += SendInput(1, &p, sizeof(INPUT)) ? 0 : 1;
     }
     return ret;
 }
