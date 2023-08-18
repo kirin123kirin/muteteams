@@ -9,30 +9,29 @@ int Send_Keys(int* keymap, unsigned int len) {
     if (keymap == NULL)
         return 1;
     
-    INPUT* inputs = (INPUT*)malloc(sizeof(INPUT) * len);
-    if (inputs == NULL)
+    INPUT* p = (INPUT*)malloc(sizeof(INPUT) * (len + 1));
+    if (p == NULL)
         return 1;
 
     /* キーを押下する */
-    for(unsigned int i = 0; i < len; i++) {
-        auto& p = inputs[i];
-        p.type = INPUT_KEYBOARD;
-        p.ki.wVk = keymap[i];
-        p.ki.dwFlags = 0;
-        if((SendInput(1, &p, sizeof(INPUT))))
-            p.ki.dwFlags = KEYEVENTF_KEYUP;
+    for(unsigned int i = 0; i < len; ++i, ++p) {
+        p->type = INPUT_KEYBOARD;
+        p->ki.wVk = keymap[i];
+        p->ki.dwFlags = 0;
+        if((SendInput(1, p, sizeof(INPUT))))
+            p->ki.dwFlags = KEYEVENTF_KEYUP;
         else
             ret += 1;
     }
 
+    p -= len;
     /* 押下したキーを上げる */
-    for(unsigned int i = 0; i < len; i++) {
-        auto& p = inputs[i];
-        if(p.type == INPUT_KEYBOARD && p.ki.dwFlags == KEYEVENTF_KEYUP && p.ki.wVk == keymap[i])
-            ret += SendInput(1, &p, sizeof(INPUT)) ? 0 : 1;
+    for(unsigned int i = 0; i < len; ++i, ++p) {
+        if(p->type == INPUT_KEYBOARD && p->ki.dwFlags == KEYEVENTF_KEYUP && p->ki.wVk == keymap[i])
+            ret += SendInput(1, p, sizeof(INPUT)) ? 0 : 1;
     }
-    
-    free(inputs);
+
+    free(p);
     return ret;
 }
 
