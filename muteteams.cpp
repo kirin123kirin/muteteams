@@ -6,13 +6,13 @@
 /* キーボードを押下する信号を送信する */
 int Send_Keys(int* keymap, unsigned int len) {
     int ret = 0;
-    if (keymap == NULL)
-        return 1;
-    
-    INPUT* p = (INPUT*)malloc(sizeof(INPUT) * (len + 1));
-    if (p == NULL)
+    if(keymap == NULL)
         return 1;
 
+    INPUT* heap = (INPUT*)malloc(sizeof(INPUT) * (len + 1));
+    if(heap == NULL)
+        return 1;
+    INPUT* p = heap;
     /* キーを押下する */
     for(unsigned int i = 0; i < len; ++i, ++p) {
         p->type = INPUT_KEYBOARD;
@@ -24,14 +24,14 @@ int Send_Keys(int* keymap, unsigned int len) {
             ret += 1;
     }
 
-    p -= len;
+    p = heap;
     /* 押下したキーを上げる */
     for(unsigned int i = 0; i < len; ++i, ++p) {
         if(p->type == INPUT_KEYBOARD && p->ki.dwFlags == KEYEVENTF_KEYUP && p->ki.wVk == keymap[i])
             ret += SendInput(1, p, sizeof(INPUT)) ? 0 : 1;
     }
 
-    free(p);
+    free(heap);
     return ret;
 }
 
@@ -58,20 +58,17 @@ BOOL CALLBACK TeamsGlobalMute(HWND hwnd, LPARAM lpr) {
 }
 
 int MuteHandler() {
-    INPUT inputs[256];
-
-    int arry[256] = {0};
+    INPUT p[256];
 
     /* キー押下されてたら強制的に離す処理 */
     for(unsigned int i = 0; i < 256; ++i) {
-        auto& p = inputs[i];
-        p.type = INPUT_KEYBOARD;
-        p.ki.dwFlags = KEYEVENTF_KEYUP;
+        p[i].type = INPUT_KEYBOARD;
+        p[i].ki.dwFlags = KEYEVENTF_KEYUP;
         if(GetAsyncKeyState(i) & 0x8000) {
-            p.ki.wVk = i;
-            if(SendInput(1, &p, sizeof(INPUT))) {
-                p.ki.dwFlags = 0;
-                p.ki.wVk = i;
+            p[i].ki.wVk = i;
+            if(SendInput(1, &p[i], sizeof(INPUT))) {
+                p[i].ki.dwFlags = 0;
+                p[i].ki.wVk = i;
             } else {
                 return 1;
             }
@@ -83,9 +80,8 @@ int MuteHandler() {
 
     /* 処理開始前に押下されていたキーを押されてた状態に復元する */
     for(unsigned int i = 0; i < 256; ++i) {
-        auto& p = inputs[i];
-        if(p.type == INPUT_KEYBOARD && p.ki.dwFlags == 0 && p.ki.wVk == i)
-            ret += SendInput(1, &p, sizeof(INPUT)) ? 0 : 1;
+        if(p[i].type == INPUT_KEYBOARD && p[i].ki.dwFlags == 0 && p[i].ki.wVk == i)
+            ret += SendInput(1, &p[i], sizeof(INPUT)) ? 0 : 1;
     }
     return ret;
 }
@@ -95,5 +91,6 @@ int MuteHandler() {
     https://stackoverflow.com/questions/48915216/link-error-when-compiling-win32-application-with-clion-cmake-msvc-2015
  */
 int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-    return MuteHandler();
+    MuteHandler();
+    return 0;
 }
