@@ -8,3 +8,9 @@ add_executable(
             muteteams.cpp
             icon.rc
         )
+add_executable(
+            muteteams_bg
+            WIN32 # no prompt
+            muteteams_bg.cpp
+            icon.rc
+        )
