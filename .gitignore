@@ -44,7 +44,6 @@ dist
 _skbuild
 eggs
 parts
-bin
 var
 sdist
 develop-eggs
@@ -264,7 +263,6 @@ ClientBin/
 *.dbmdl
 *.dbproj.schemaview
 *.jfm
-*.pfx
 *.publishsettings
 orleans.codegen.cs
 
